@@ -6,8 +6,8 @@ var UserSchema = new Schema({
 	username:{type:String,required:true,unique:true},
 	email:{type:String,required:true,unique:true},
 	password:{type:String,required:true,unique:false},
-	leader:Boolean,
-	member:Boolean,
+	leader:{type:Boolean,required:true},
+	member:{type:Boolean,required:true},
 });
 
 const Users = mongoose.model("Users",UserSchema);

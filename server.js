@@ -50,6 +50,18 @@ app.post("/register",(req,res)=>{
 	});
 });
 
+app.post("/getRole",(req,res)=>{
+	var {username} = req.body;
+	Users.findOne({username:username},(err,obj)=>{
+		if(err){
+			console.log(err);
+			res.status(404).json(err);
+		}
+		else
+			res.send(obj);
+	});
+});
+
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
 });
