@@ -62,6 +62,28 @@ app.post("/getRole",(req,res)=>{
 	});
 });
 
+app.post("/setLeader",(req,res)=>{
+	var {username} = req.body;
+	console.log('username is',username);
+	Users.findOneAndUpdate({username:username},{$set:{leader:true}},{new:true},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/setMember",(req,res)=>{
+	var {username} = req.body;
+	console.log('username is',username);
+	Users.findOneAndUpdate({username:username},{$set:{member:true}},{new:true},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
 });
