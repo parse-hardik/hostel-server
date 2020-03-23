@@ -4,6 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 var {Users} = require('./models/Users');
 var {GroupList} = require('./models/GroupList');
+var {Notification} = require('./models/Notifications');
 var connection = require('./config.js').mongooseConnection;
 
 var app = express();
@@ -65,7 +66,7 @@ app.post("/getRole",(req,res)=>{
 app.post("/setLeader",(req,res)=>{
 	var {username} = req.body;
 	console.log('username is',username);
-	Users.findOneAndUpdate({username:username},{$set:{leader:true}},{new:true},(err,obj)=>{
+	Users.findOneAndUpdate({username:username},{$set:{leader:true},$set:{gname:username}},{new:true},(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
 		else
@@ -77,6 +78,50 @@ app.post("/setMember",(req,res)=>{
 	var {username} = req.body;
 	console.log('username is',username);
 	Users.findOneAndUpdate({username:username},{$set:{member:true}},{new:true},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/createNotif",(req,res)=>{
+	var {fromf,to} = req.body;
+	// console.log('username is',username);
+	var notif = {fromgname:fromf,tousername:to}
+	Notification.create(notif,(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/getNotifsformember",(req,res)=>{
+	var {username} = req.body;
+	console.log('username is',username);
+	Notification.find({username:username},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/getUsers",(req,res)=>{
+	var {leader} = req.body;
+	Users.find({leader:leader},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/getGroups",(req,res)=>{
+	var {gname,grpid,members,color} = req.body;
+	var grp={gname:gname,grpid:grpid,members:members,color:color};
+	GroupList.create(grp,(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
 		else

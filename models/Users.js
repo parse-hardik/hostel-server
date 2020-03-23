@@ -8,6 +8,7 @@ var UserSchema = new Schema({
 	password:{type:String,required:true,unique:false},
 	leader:{type:Boolean,required:true},
 	member:{type:Boolean,required:true},
+	gname:{type:String,default:'null'},
 });
 
 const Users = mongoose.model("Users",UserSchema);
