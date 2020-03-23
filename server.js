@@ -86,9 +86,9 @@ app.post("/setMember",(req,res)=>{
 });
 
 app.post("/createNotif",(req,res)=>{
-	var {fromf,to} = req.body;
+	var {fromGname,toUsername,fromUsername,toGname} = req.body;
 	// console.log('username is',username);
-	var notif = {fromgname:fromf,tousername:to}
+	var notif = {fromgname:fromGname,tousername:toUsername,fromusername:fromUsername,togname:toGname}
 	Notification.create(notif,(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
@@ -100,7 +100,7 @@ app.post("/createNotif",(req,res)=>{
 app.post("/getNotifsformember",(req,res)=>{
 	var {username} = req.body;
 	console.log('username is',username);
-	Notification.find({username:username},(err,obj)=>{
+	Notification.find({tousername:username},(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
 		else
