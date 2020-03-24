@@ -9,7 +9,7 @@ var UserSchema = new Schema({
 	leader:{type:Boolean,required:true},
 	member:{type:Boolean,required:true},
 
-	group:{type:String,required:false}
+	group:{type:String,required:false},
 
 	gname:{type:String,default:'null'},
 
