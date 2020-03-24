@@ -23,6 +23,31 @@ app.get("/",(req,res)=>{
 	res.send(ty);
 });
 
+app.get("/getGroup",(req,res)=>{
+	GroupList.find(function(err,finalgrps) {
+		if(err){
+			console.log(err);
+		}
+		else{
+			res.json(finalgrps);
+			console.log(finalgrps);
+		}
+
+	})
+});
+app.get("/getUsers",(req,res)=>{
+	Users.find(function(err,allUsers) {
+		if(err){
+			console.log(err);
+		}
+		else{
+			res.json(allUsers);
+			console.log(allUsers);
+		}
+
+	})
+});
+
 app.post("/signIn",(req,res)=>{
 	var {username,password} = req.body;
 	console.log(username);
@@ -83,6 +108,7 @@ app.post("/setMember",(req,res)=>{
 			res.json(obj);
 		});	
 });
+
 
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
