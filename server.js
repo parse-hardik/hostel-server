@@ -31,7 +31,7 @@ app.get("/getGroup",(req,res)=>{
 		}
 		else{
 			res.json(finalgrps);
-			console.log(finalgrps);
+			// console.log(finalgrps);
 		}
 
 	})
@@ -43,7 +43,7 @@ app.get("/getUsers",(req,res)=>{
 		}
 		else{
 			res.json(allUsers);
-			console.log(allUsers);
+			// console.log(allUsers);
 		}
 
 	})
@@ -91,12 +91,20 @@ app.post("/getRole",(req,res)=>{
 app.post("/setLeader",(req,res)=>{
 	var {username} = req.body;
 	console.log('username is',username);
-	Users.findOneAndUpdate({username:username},{$set:{leader:true},$set:{gname:username}},{new:true},(err,obj)=>{
+	Users.findOneAndUpdate({username:username},{$set:{gname:username}},{new:true},(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
 		else
+		{
 			res.json(obj);
-		});	
+			Users.findOneAndUpdate({username:username},{$set:{leader:true}},{new:true},(err,obj)=>{
+				if(err)
+					console.log(err);
+				else
+					console.log(obj);
+			});
+		}
+});	
 });
 
 app.post("/setMember",(req,res)=>{
@@ -125,8 +133,19 @@ app.post("/createNotif",(req,res)=>{
 
 app.post("/getNotifsformember",(req,res)=>{
 	var {username} = req.body;
-	console.log('username is',username);
+	// console.log('username is',username);
 	Notification.find({tousername:username},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
+
+app.post("/getNotifsforLeader",(req,res)=>{
+	var {username} = req.body;
+	// console.log('username is',username);
+	Notification.find({togname:username},(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
 		else
@@ -155,6 +174,15 @@ app.post("/getGroups",(req,res)=>{
 		});	
 });
 
+app.post("/getOneUser",(req,res)=>{
+	var {username} =req.body;
+	Users.find({username:username},(err,obj)=>{
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+		});	
+});
 
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
