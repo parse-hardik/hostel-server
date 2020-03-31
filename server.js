@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 var {Users} = require('./models/Users');
 var {GroupList} = require('./models/GroupList');
 var {Notification} = require('./models/Notifications');
+var {Wing}=require('./models/Wing');
 var connection = require('./config.js').mongooseConnection;
 
 var app = express();
@@ -43,9 +44,21 @@ app.get("/getUsers",(req,res)=>{
 		}
 		else{
 			res.json(allUsers);
-			// console.log(allUsers);
 		}
 
+	})
+});
+
+app.get("/getWing",(req,res)=>{
+	Wing.find(function(err,allWings){
+		if(err)
+		{
+			console.log(err);
+		}
+		else{
+			res.json(allWings);
+			console.log(allWings);
+		}
 	})
 });
 
@@ -183,6 +196,41 @@ app.post("/getOneUser",(req,res)=>{
 			res.json(obj);
 		});	
 });
+
+app.post("/setSelected",(req,res)=>{
+	var {bhawan,floor,wingNo}=req.body;
+	console.log(bhawan,wingNo,floor);
+	Wing.findOneAndUpdate({bhawan:bhawan,floor:floor,wingNo:wingNo},{$set:{status:"selected"}},{new:true},(err,obj)=>{
+		console.log(obj);
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+	})
+})
+
+app.post("/setBlocked",(req,res)=>{
+	var {bhawan,floor,wingNo}=req.body;
+	Wing.findOneAndUpdate({bhawan:bhawan,floor:floor,wingNo:wingNo},{$set:{status:"blocked"}},{new:true},(err,obj)=>{
+		console.log(obj);
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+	})
+})
+
+app.post("/setFree",(req,res)=>{
+	var {bhawan,floor,wingNo}=req.body;
+	Wing.findOneAndUpdate({bhawan:bhawan,floor:floor,wingNo:wingNo},{$set:{status:"free"}},{new:true},(err,obj)=>{
+		console.log(obj);
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+	})
+})
+
 
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
