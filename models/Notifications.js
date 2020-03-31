@@ -10,6 +10,7 @@ var NotificationSchema = new Schema({
 });
 
 NotificationSchema.index({ fromgname: 1, tousername: 1 }, { unique: true })
+NotificationSchema.index({ fromusername: 1, togname: 1 }, { unique: true })
 
 const Notification = mongoose.model("Notification",NotificationSchema);
 
