@@ -54,6 +54,7 @@ app.get("/getWing",(req,res)=>{
 		if(err)
 		{
 			console.log(err);
+			res.json(err);
 		}
 		else{
 			res.json(allWings);
@@ -231,6 +232,57 @@ app.post("/setFree",(req,res)=>{
 	})
 })
 
+app.post("/notifsReq",(req,res)=>{
+	var {fromGname,toUsername,fromUsername,toGname,accept} = req.body;
+	console.log('fromGname',fromGname)
+	if(fromGname!==undefined && toUsername!==undefined)
+	{
+		if(accept===true)
+		{
+			Users.findOneAndUpdate({username:toUsername},{$set:{gname:fromGname}},{new:true},(err,obj)=>{
+				console.log(obj);
+				if(err)
+					res.status(404).json(err);
+				else
+					res.json(obj);
+			})
+		}
+		else
+		{
+			Notification.findOneAndUpdate({fromgname:fromGname,tousername:toUsername},{$set:{colour:"red"}},{new:true},(err,obj)=>{
+				console.log(obj);
+				if(err)
+					res.status(404).json(err);
+				else
+					res.json(obj);
+			})
+		}
+	}
+	else
+		if(fromUsername!==undefined && toGname!==undefined)
+		{
+			if(accept===true)
+			{
+				Users.findOneAndUpdate({username:fromUsername},{$set:{gname:toGname}},{new:true},(err,obj)=>{
+					console.log(obj);
+					if(err)
+						res.status(404).json(err);
+					else
+						res.json(obj);
+				})
+			}
+			else
+			{
+				Notification.findOneAndUpdate({fromusername:fromUsername,togname:toGname},{$set:{colour:"red"}},{new:true},(err,obj)=>{
+					console.log(obj);
+					if(err)
+						res.status(404).json(err);
+					else
+						res.json(obj);
+				})
+			}
+		}
+})
 
 app.listen(5000,()=>{
 	console.log('listening on port 5000');

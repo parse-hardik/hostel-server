@@ -6,7 +6,8 @@ var NotificationSchema = new Schema({
 	fromgname:{type:String,unique:false,default:null},
 	tousername:{type:String,unique:false,default:null},
 	fromusername:{type:String,unique:false,default:null},
-	togname:{type:String,unique:false,default:null}
+	togname:{type:String,unique:false,default:null},
+	colour:{type:String,default:white}
 });
 
 NotificationSchema.index({ fromgname: 1, tousername: 1 }, { unique: true })
