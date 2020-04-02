@@ -7,11 +7,10 @@ var NotificationSchema = new Schema({
 	tousername:{type:String,unique:false,default:null},
 	fromusername:{type:String,unique:false,default:null},
 	togname:{type:String,unique:false,default:null},
-	colour:{type:String,default:white}
+	colour:{type:String,default:"#d3f2eb"}
 });
 
-NotificationSchema.index({ fromgname: 1, tousername: 1 }, { unique: true })
-NotificationSchema.index({ fromusername: 1, togname: 1 }, { unique: true })
+NotificationSchema.index({ fromgname: 1, tousername: 1,fromusername: 1, togname: 1 }, { unique: true })
 
 const Notification = mongoose.model("Notification",NotificationSchema);
 

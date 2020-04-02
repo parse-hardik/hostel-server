@@ -151,8 +151,10 @@ app.post("/getNotifsformember",(req,res)=>{
 	Notification.find({tousername:username},(err,obj)=>{
 		if(err)
 			res.status(404).json(err);
-		else
+		else{
+			console.log(obj)
 			res.json(obj);
+		}
 		});	
 });
 
@@ -239,6 +241,9 @@ app.post("/notifsReq",(req,res)=>{
 	{
 		if(accept===true)
 		{
+			Notification.findOneAndUpdate({fromgname:fromGname,tousername:toUsername},{$set:{colour:"#00ff00"}},{new:true},(err,obj)=>{
+				console.log(obj);
+			})
 			Users.findOneAndUpdate({username:toUsername},{$set:{gname:fromGname}},{new:true},(err,obj)=>{
 				console.log(obj);
 				if(err)
@@ -249,7 +254,7 @@ app.post("/notifsReq",(req,res)=>{
 		}
 		else
 		{
-			Notification.findOneAndUpdate({fromgname:fromGname,tousername:toUsername},{$set:{colour:"red"}},{new:true},(err,obj)=>{
+			Notification.findOneAndUpdate({fromgname:fromGname,tousername:toUsername},{$set:{colour:"#dc143c"}},{new:true},(err,obj)=>{
 				console.log(obj);
 				if(err)
 					res.status(404).json(err);
@@ -263,6 +268,9 @@ app.post("/notifsReq",(req,res)=>{
 		{
 			if(accept===true)
 			{
+				Notification.findOneAndUpdate({fromusername:fromUsername,togname:toGname},{$set:{colour:"#00ff00"}},{new:true},(err,obj)=>{
+					console.log(obj);
+				})
 				Users.findOneAndUpdate({username:fromUsername},{$set:{gname:toGname}},{new:true},(err,obj)=>{
 					console.log(obj);
 					if(err)
@@ -273,7 +281,7 @@ app.post("/notifsReq",(req,res)=>{
 			}
 			else
 			{
-				Notification.findOneAndUpdate({fromusername:fromUsername,togname:toGname},{$set:{colour:"red"}},{new:true},(err,obj)=>{
+				Notification.findOneAndUpdate({fromusername:fromUsername,togname:toGname},{$set:{colour:"#dc143c"}},{new:true},(err,obj)=>{
 					console.log(obj);
 					if(err)
 						res.status(404).json(err);
