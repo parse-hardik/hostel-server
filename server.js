@@ -292,6 +292,11 @@ app.post("/notifsReq",(req,res)=>{
 		}
 })
 
-app.listen(5000,()=>{
-	console.log('listening on port 5000');
+var ser = app.listen(5000,()=>{
+	var host= ser.address().address;
+	var port= ser.address().port;
+
+	console.log('listening on port 5000 and at http://%s:%s',host,port);
 });
+
+module.exports = app;
