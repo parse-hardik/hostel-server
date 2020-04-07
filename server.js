@@ -292,6 +292,10 @@ app.post("/notifsReq",(req,res)=>{
 		}
 })
 
+app.get('/',(req,res)=>{
+	res.status(200).json('Server is up and running')
+})
+
 app.listen(process.env.PORT || 5000,()=>{
 	console.log(`listening on port ${process.env.PORT}`);
 });
