@@ -292,6 +292,10 @@ app.post("/notifsReq",(req,res)=>{
 		}
 })
 
+app.get("/",(req,res)=>{
+	res.status(200).json(`Server running on port 5000`)
+})
+
 app.listen(5000,()=>{
 	console.log('listening on port 5000');
 });
