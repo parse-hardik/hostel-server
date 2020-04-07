@@ -6,7 +6,7 @@ var {Users} = require('./models/Users');
 var {GroupList} = require('./models/GroupList');
 var {Notification} = require('./models/Notifications');
 var {Wing}=require('./models/Wing');
-var connection = require('./config.js').mongooseConnection;
+var connection = "mongodb+srv://hardik:hardik@cluster0-zs92y.mongodb.net/test?retryWrites=true&w=majority";
 
 var app = express();
 app.use(cors({origin: true, credentials: true}));
