@@ -10,6 +10,7 @@ var UserSchema = new Schema({
 	member:{type:Boolean,required:true},
 	group:{type:String,required:false},
 	gname:{type:String,default:'null'},
+	wing:{type:String,deafult:'null'},
 
 });
 
