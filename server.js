@@ -6,6 +6,7 @@ var {Users} = require('./models/Users');
 var {GroupList} = require('./models/GroupList');
 var {Notification} = require('./models/Notifications');
 var {Wing}=require('./models/Wing');
+var {Timer}=require('./models/Timer');
 var connection = require('./config.js').mongooseConnection;
 
 var app = express();
@@ -290,6 +291,30 @@ app.post("/notifsReq",(req,res)=>{
 				})
 			}
 		}
+})
+
+app.post('/timer',(req,res)=>{
+	var {timer} = req.body;
+	var time = {
+		countdown: new Date(),
+		updatedAt:new Date(),
+	}
+	Timer.create(time,(err,obj)=>{
+		if(err)
+			res.status(500).json(err);
+		else
+			res.status(201).json({id:obj.id});	
+	})
+})
+
+app.get('/timer/:id',(req,res)=>{
+	var id = req.params.id;
+	Timer.findById(id,(err,obj)=>{
+		if(err)
+			res.status(500).json(err);
+		else
+			res.status(200).json(obj);
+	})
 })
 
 app.get('/',(req,res)=>{
