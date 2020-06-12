@@ -113,8 +113,14 @@ app.post("/setLeader", (req, res) => {
 			Users.findOneAndUpdate({ username: username }, { $set: { leader: true } }, { new: true }, (err, obj) => {
 				if (err)
 					console.log(err);
-				else
+				else{
+					var group = {
+						gname: username,
+						member: 1,
+					}
+					GroupList.create(group);
 					console.log(obj);
+				}
 			});
 		}
 	});
