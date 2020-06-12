@@ -79,7 +79,7 @@ app.post("/signIn",(req,res)=>{
 
 app.post("/register",(req,res)=>{
 	var {name,username,email,password,leader,member} = req.body;
-	var user = {name:name,username:username,email:email,password:password,leader:leader,member:member};
+	var user = {name:name,username:username,email:email,password:password,leader:leader,member:member,wing:"null"};
 	Users.create(user,(err,obj)=>{
 		if(err){
 			console.log(err);
@@ -205,6 +205,18 @@ app.post("/setSelected",(req,res)=>{
 	var {bhawan,floor,wingNo}=req.body;
 	console.log(bhawan,wingNo,floor);
 	Wing.findOneAndUpdate({bhawan:bhawan,floor:floor,wingNo:wingNo},{$set:{status:"selected"}},{new:true},(err,obj)=>{
+		console.log(obj);
+		if(err)
+			res.status(404).json(err);
+		else
+			res.json(obj);
+	})
+})
+
+app.post("/selectWing",(req,res)=>{
+	var {wing,user}=req.body;
+	console.log("hiii"+wing+user);
+	Users.findOneAndUpdate({username:user},{$set:{wing:wing}},(err,obj)=>{
 		console.log(obj);
 		if(err)
 			res.status(404).json(err);
