@@ -342,6 +342,20 @@ app.get('/timer/:id', (req, res) => {
 	})
 })
 
+app.post('/timer/:id',(req,res)=>{
+	var id = req.params.id;
+	var {countdown} = req.body;
+	Timer.findByIdAndUpdate(id,{
+		countdown: countdown,
+		updatedAt: new Date(),
+	},(err,obj)=>{
+		if(err)
+			res.status(500).json(err);
+		else
+			res.json(obj);	
+	})
+})
+
 app.get('/', (req, res) => {
 	res.status(200).json('Server is up and running')
 })
