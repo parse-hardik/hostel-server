@@ -323,6 +323,7 @@ app.post('/timer', (req, res) => {
 	var time = {
 		countdown: new Date(),
 		updatedAt: new Date(),
+		for:'initial setup',
 	}
 	Timer.create(time, (err, obj) => {
 		if (err)
@@ -344,10 +345,12 @@ app.get('/timer/:id', (req, res) => {
 
 app.post('/timer/:id',(req,res)=>{
 	var id = req.params.id;
-	var {countdown} = req.body;
+	var countdown = new Date(req.body.setTime);
+	var sprint = req.body.sprint;
 	Timer.findByIdAndUpdate(id,{
 		countdown: countdown,
 		updatedAt: new Date(),
+		for: sprint,
 	},(err,obj)=>{
 		if(err)
 			res.status(500).json(err);

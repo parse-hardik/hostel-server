@@ -4,6 +4,7 @@ var Schema = mongoose.Schema;
 var TimerSchema = new Schema({
 	countdown: {type:Date, required:true},
 	updatedAt: {type:Date, required:true},
+	for :{type:String ,required:true},
 });
 
 const Timer = mongoose.model("Timer", TimerSchema);
