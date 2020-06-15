@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true);
 mongoose.set('useFindAndModify', false);
-DATABASE_CONNECTION = connection;
+let DATABASE_CONNECTION = connection;
 
 mongoose.connect(DATABASE_CONNECTION, { useNewUrlParser: true });
 
@@ -110,16 +110,16 @@ app.post("/setLeader", (req, res) => {
 			res.status(404).json(err);
 		else {
 			res.json(obj);
-			Users.findOneAndUpdate({ username: username }, { $set: { leader: true } }, { new: true }, (err, obj) => {
-				if (err)
-					console.log(err);
+			Users.findOneAndUpdate({ username: username }, { $set: { leader: true } }, { new: true }, (error, object) => {
+				if (error)
+					console.log(error);
 				else{
 					var group = {
 						gname: username,
 						member: 1,
 					}
 					GroupList.create(group);
-					console.log(obj);
+					console.log(object);
 				}
 			});
 		}
@@ -148,11 +148,11 @@ app.post("/createNotif", (req, res) => {
 		else{
 			if(obj.length===0){
 				console.log('yes');
-				Notification.create(notif, (err, obj) => {
-					if (err)
-						res.status(404).json(err);
+				Notification.create(notif, (error, object) => {
+					if (error)
+						res.status(404).json(error);
 					else
-						res.json(obj);
+						res.json(object);
 				})
 			}
 			else{
@@ -319,7 +319,6 @@ app.post("/notifsReq", (req, res) => {
 })
 
 app.post('/timer', (req, res) => {
-	var { timer } = req.body;
 	var time = {
 		countdown: new Date(),
 		updatedAt: new Date(),
