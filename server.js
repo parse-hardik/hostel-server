@@ -21,11 +21,6 @@ let DATABASE_CONNECTION = connection;
 
 mongoose.connect(DATABASE_CONNECTION, { useNewUrlParser: true });
 
-app.get("/", (req, res) => {
-	var ty = { userf: req.body.username };
-	res.send(ty);
-});
-
 app.get("/getGroup", (req, res) => {
 	GroupList.find(function (err, finalgrps) {
 		if (err) {
