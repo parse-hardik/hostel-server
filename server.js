@@ -104,7 +104,7 @@ app.post("/setLeader", (req, res) => {
 		if (err)
 			res.status(404).json(err);
 		else {
-			res.json(obj);
+			
 			Users.findOneAndUpdate({ username: username }, { $set: { leader: true } }, { new: true }, (error, object) => {
 				if (error)
 					console.log(error);
@@ -115,6 +115,7 @@ app.post("/setLeader", (req, res) => {
 					}
 					GroupList.create(group);
 					console.log(object);
+					res.json(obj);
 				}
 			});
 		}
