@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var GroupSchema = new Schema({
-	grpid:{type:String,required:true,unique:true},
+	grpid:{type:String,required:false,unique:true},
 	gname:{type:String,required:true,unique:true},
 	members:{type:Number,default:0},
 	color:{type:String,default:'#e88f17'},

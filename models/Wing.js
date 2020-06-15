@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema =mongoose.Schema;
  
 var WingSchema =new Schema ({
-	wingId : {type:String  ,unique:true,required:true, unique:true},
+	wingId : {type:String  ,unique:true,required:true},
 	bhawan : {type:String ,unique:false,required:true},
 	floor : {type:String,unique:false, required:true},
 	status :{type:String,unique:false, required:true },
