@@ -100,22 +100,28 @@ app.post("/getRole", (req, res) => {
 app.post("/setLeader", (req, res) => {
 	var { username } = req.body;
 	console.log('username is', username);
-	Users.findOneAndUpdate({ username: username }, { $set: { gname: username,leader: true } }, { new: true }, (err, obj) => {
+	Users.findOneAndUpdate({ username: username }, { $set: { gname: username} }, { new: true }, (err, obj) => {
 		if (err)
 			res.status(404).json(err);
 		else {
-					var group = {
-						gname: username,
-						member: 1,
-					}
-					GroupList.create(group, (error,object)=>{
-						if(error)
-							res.status(404).json(error);
-						else	
-						res.json(object);
-					});
+			Users.findOneAndUpdate({ username: username }, { $set: { gname: username} }, { new: true }, (err, obj)=>{
+				if(err)
+				res.status(404).json(err);
+				else
+				var group = {
+					gname: username,
+					member: 1,
+				}
+				GroupList.create(group, (error,object)=>{
+					if(error)
+						res.status(404).json(error);
+					else	
+					res.json(object);
+				});
 			}
-		});
+			)
+		}}
+		);
 });
 
 app.post("/setMember", (req, res) => {
