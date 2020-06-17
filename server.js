@@ -111,6 +111,7 @@ app.post("/setLeader", (req, res) => {
 				var group = {
 					gname: username,
 					member: 1,
+					grpid: obj._id,
 				}
 				GroupList.create(group, (error,object)=>{
 					if(error)
