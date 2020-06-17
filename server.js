@@ -104,7 +104,7 @@ app.post("/setLeader", (req, res) => {
 		if (err)
 			res.status(404).json(err);
 		else {
-			Users.findOneAndUpdate({ username: username }, { $set: { gname: username} }, { new: true }, (err, obj)=>{
+			Users.findOneAndUpdate({ username: username }, { $set: { leader:true} }, { new: true }, (err, obj)=>{
 				if(err)
 				res.status(404).json(err);
 				else
