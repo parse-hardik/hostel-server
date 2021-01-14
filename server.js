@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 var { Users } = require('./models/Users');
 var { GroupList } = require('./models/GroupList');
@@ -60,20 +61,21 @@ app.get("/getWing", (req, res) => {
 
 app.post("/signIn", (req, res) => {
 	var { username, password } = req.body;
-	console.log(username);
-	Users.findOne({ username: username, password: password }, (err, result) => {
+	
+	Users.findOne({ username: username},(err, result) => {
 		if (err)
 			res.send(err);
-		else {
+		if(bcrypt.compare(password, result.password))
 			res.send(result);
-			console.log(result);
-		}
+		console.log(result);
 	});
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
 	var { name, username, email, password, leader, member } = req.body;
-	var user = { name: name, username: username, email: email, password: password, leader: leader, member: member, wing: "null" };
+	const hashedPassword = await bcrypt.hash(password,10);
+	console.log(hashedPassword)
+	var user = { name: name, username: username, email: email, password: hashedPassword, leader: leader, member: member, wing: "null" };
 	Users.create(user, (err, obj) => {
 		if (err) {
 			console.log(err);
@@ -360,7 +362,7 @@ app.post('/timer/:id',(req,res)=>{
 app.get('/', (req, res) => {
 	res.status(200).json('Server is up and running')
 })
-
+process.env.PORT = 5000
 app.listen(process.env.PORT || 5000, () => {
 	console.log(`listening on port ${process.env.PORT}`);
 });
