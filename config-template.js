@@ -1,3 +1,5 @@
 module.exports = {
-	mongooseConnection: /*"Your MongoDB connection link here"*/,
+	mongooseConnection: "",
+	GOOGLE_CLIENT_ID: "",
+	GOOGLE_CLIENT_SECRET: "",
 };
