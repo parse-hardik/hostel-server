@@ -1,6 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const passport = require('passport');
+const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session')
 const mongoose = require('mongoose');
 var { Users } = require('./models/Users');
 var { GroupList } = require('./models/GroupList');
@@ -8,11 +11,18 @@ var { Notification } = require('./models/Notifications');
 var { Wing } = require('./models/Wing');
 var { Timer } = require('./models/Timer');
 var connection = require('./config.js').mongooseConnection;
+require('./passport-config');
 
 var app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieSession({
+	name: 'auth',
+	keys: ['key1', 'key2']
+}))
+app.use(passport.initialize());
+app.use(passport.session());
 
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true);
@@ -60,20 +70,21 @@ app.get("/getWing", (req, res) => {
 
 app.post("/signIn", (req, res) => {
 	var { username, password } = req.body;
-	console.log(username);
-	Users.findOne({ username: username, password: password }, (err, result) => {
+
+	Users.findOne({ username: username }, async (err, result) => {
 		if (err)
 			res.send(err);
-		else {
+		if (await bcrypt.compare(password, result.password))
 			res.send(result);
-			console.log(result);
-		}
+		console.log(result);
 	});
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
 	var { name, username, email, password, leader, member } = req.body;
-	var user = { name: name, username: username, email: email, password: password, leader: leader, member: member, wing: "null" };
+	const hashedPassword = await bcrypt.hash(password, 10);
+	console.log(hashedPassword)
+	var user = { name: name, username: username, email: email, password: hashedPassword, leader: leader, member: member, wing: "null" };
 	Users.create(user, (err, obj) => {
 		if (err) {
 			console.log(err);
@@ -100,29 +111,30 @@ app.post("/getRole", (req, res) => {
 app.post("/setLeader", (req, res) => {
 	var { username } = req.body;
 	console.log('username is', username);
-	Users.findOneAndUpdate({ username: username }, { $set: { gname: username} }, { new: true }, (err, obj) => {
+	Users.findOneAndUpdate({ username: username }, { $set: { gname: username } }, { new: true }, (err, obj) => {
 		if (err)
 			res.status(404).json(err);
 		else {
-			Users.findOneAndUpdate({ username: username }, { $set: { leader:true} }, { new: true }, (err, obj)=>{
-				if(err)
-				res.status(404).json(err);
+			Users.findOneAndUpdate({ username: username }, { $set: { leader: true } }, { new: true }, (err, obj) => {
+				if (err)
+					res.status(404).json(err);
 				else
-				var group = {
-					gname: username,
-					member: 1,
-					grpid: obj._id,
-				}
-				GroupList.create(group, (error,object)=>{
-					if(error)
+					var group = {
+						gname: username,
+						member: 1,
+						grpid: obj._id,
+					}
+				GroupList.create(group, (error, object) => {
+					if (error)
 						res.status(404).json(error);
-					else	
-					res.json(object);
+					else
+						res.json(object);
 				});
 			}
 			)
-		}}
-		);
+		}
+	}
+	);
 });
 
 app.post("/setMember", (req, res) => {
@@ -141,11 +153,11 @@ app.post("/createNotif", (req, res) => {
 	var { fromGname, toUsername, fromUsername, toGname } = req.body;
 	// console.log('username is',username);
 	var notif = { fromgname: fromGname, tousername: toUsername, fromusername: fromUsername, togname: toGname }
-	Notification.find(notif,(err,obj)=>{
-		if(err)
+	Notification.find(notif, (err, obj) => {
+		if (err)
 			res.status(404).json(err);
-		else{
-			if(obj.length===0){
+		else {
+			if (obj.length === 0) {
 				console.log('yes');
 				Notification.create(notif, (error, object) => {
 					if (error)
@@ -154,7 +166,7 @@ app.post("/createNotif", (req, res) => {
 						res.json(object);
 				})
 			}
-			else{
+			else {
 				res.status(200).json({
 					code: 123,
 					message: 'Notif already exists',
@@ -321,7 +333,7 @@ app.post('/timer', (req, res) => {
 	var time = {
 		countdown: new Date(),
 		updatedAt: new Date(),
-		for:'initial setup',
+		for: 'initial setup',
 	}
 	Timer.create(time, (err, obj) => {
 		if (err)
@@ -341,26 +353,57 @@ app.get('/timer/:id', (req, res) => {
 	})
 })
 
-app.post('/timer/:id',(req,res)=>{
+app.post('/timer/:id', (req, res) => {
 	var id = req.params.id;
 	var countdown = new Date(req.body.setTime);
 	var sprint = req.body.sprint;
-	Timer.findByIdAndUpdate(id,{
+	Timer.findByIdAndUpdate(id, {
 		countdown: countdown,
 		updatedAt: new Date(),
 		for: sprint,
-	},(err,obj)=>{
-		if(err)
+	}, (err, obj) => {
+		if (err)
 			res.status(500).json(err);
 		else
-			res.json(obj);	
+			res.json(obj);
 	})
+})
+
+const isLoggedIn = (req,res,next) => {
+	if(req.user)
+		next();
+	else	
+		res.sendStatus(401);
+}
+
+app.get('/good', isLoggedIn, (req, res) => {
+	res.send(`Logged in as ${req.user}`)
+})
+
+app.get('/failed', (req, res) => res.send(`Did not log in`))
+
+app.get('/google',
+	passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/google/callback',
+	passport.authenticate('google', { failureRedirect: '/failed' }),
+	function (req,res) {
+		// Successful authentication, redirect home.
+		console.log(req.user);
+		// res.redirect('/good');
+		res.send(`Logged in as ${req.user.displayName}`)
+	});
+
+app.get('/logout', (req,res) => {
+	req.session=null;
+	req.logOut();
+	res.redirect('/');
 })
 
 app.get('/', (req, res) => {
 	res.status(200).json('Server is up and running')
 })
-
+process.env.PORT = 5000
 app.listen(process.env.PORT || 5000, () => {
 	console.log(`listening on port ${process.env.PORT}`);
 });
