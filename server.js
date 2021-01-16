@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
+const { sendMail } = require('./mailer');
 const mongoose = require('mongoose');
 var { Users } = require('./models/Users');
 var { GroupList } = require('./models/GroupList');
@@ -91,6 +92,8 @@ app.post("/register", async (req, res) => {
 			res.send({ status: false, error: err })
 		}
 		else {
+			sendMail('Registered Successfully!', '🎉', email).then(result=>console.log(result))
+				.catch(err => console.log(err));
 			res.send(obj);
 		}
 	});
