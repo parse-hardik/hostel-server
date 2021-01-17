@@ -217,81 +217,81 @@ app.post("/createNotif", (req, res) => {
 });
 
 app.post("/getNotifsformember", (req, res) => {
-	var { username } = req.body;
-	// console.log('username is',username);
+	const { username } = req.body
 	Notification.find({ tousername: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else {
-			console.log(obj)
-			res.json(obj);
+			res.json(obj)
 		}
 	});
 });
 
 app.post("/getNotifsforLeader", (req, res) => {
-	var { username } = req.body;
-	// console.log('username is',username);
+	const { username } = req.body
 	Notification.find({ togname: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getUsers", (req, res) => {
-	var { leader } = req.body;
+	const { leader } = req.body
 	Users.find({ leader: leader }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getGroups", (req, res) => {
-	var { gname, grpid, members, color } = req.body;
-	var grp = { gname: gname, grpid: grpid, members: members, color: color };
+	const { gname, grpid, members, color } = req.body
+	const grp = { gname: gname, grpid: grpid, members: members, color: color }
 	GroupList.create(grp, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getOneUser", (req, res) => {
-	var { username } = req.body;
+	const { username } = req.body
 	Users.find({ username: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	});
 });
 
 app.post("/setSelected", (req, res) => {
-	var { bhawan, floor, wingNo } = req.body;
-	console.log(bhawan, wingNo, floor);
+	const { bhawan, floor, wingNo } = req.body
+	console.log(bhawan, wingNo, floor)
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "selected" } }, { new: true }, (err, obj) => {
-		console.log(obj);
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/selectWing", (req, res) => {
-	var { wing, user } = req.body;
-	console.log("hiii" + wing + user);
+	const { wing, user } = req.body
 	Users.findOneAndUpdate({ username: user }, { $set: { wing: wing } }, (err, obj) => {
-		console.log(obj);
 		if (err)
-			res.status(404).json(err);
-		else
-			res.json(obj);
+			res.status(404).json(err)
+		else{
+			Users.find({gname: user}, (err, arr) => {
+				arr.forEach(object =>{
+					sendMail('Wing Alloted', '✨', object.email)
+				})
+			})
+			res.json(obj)
+		}
 	})
 })
 
