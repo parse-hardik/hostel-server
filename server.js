@@ -81,22 +81,48 @@ app.post("/signIn", (req, res) => {
 	});
 });
 
+async function createUser(user) {
+	await Users.create(user, (err, obj) => {
+		if (err) {
+			console.log(err);
+			// res.send({ status: false, error: err })
+			return {
+				status: false, 
+				error: err
+			}
+		}
+		else {
+			sendMail('Registered Successfully!', '🎉', user.email).then(result=>console.log(result))
+				.catch(err => console.log(err));
+			// res.send(obj);
+			return obj;
+		}
+	});
+}
+
 app.post("/register", async (req, res) => {
 	var { name, username, email, password, leader, member } = req.body;
 	const hashedPassword = await bcrypt.hash(password, 10);
 	console.log(hashedPassword)
-	var user = { name: name, username: username, email: email, password: hashedPassword, leader: leader, member: member, wing: "null" };
-	Users.create(user, (err, obj) => {
-		if (err) {
-			console.log(err);
-			res.send({ status: false, error: err })
-		}
-		else {
-			sendMail('Registered Successfully!', '🎉', email).then(result=>console.log(result))
-				.catch(err => console.log(err));
-			res.send(obj);
-		}
-	});
+	var user = { 
+		name: name, 
+		username: username, 
+		email: email, 
+		password: hashedPassword, 
+		leader: leader, 
+		member: member, 
+		wing: "null" 
+	}
+	createUser(user)
+		.then(result => {
+			console.log(result)
+			res.status(201).send({
+				name: user.name,
+				user: user.username,
+				email: user.email
+			})
+		})
+		.catch (err => console.log(err)) 
 });
 
 app.post("/getRole", (req, res) => {
@@ -112,7 +138,7 @@ app.post("/getRole", (req, res) => {
 });
 
 app.post("/setLeader", (req, res) => {
-	var { username } = req.body;
+	const { username } = req.body;
 	console.log('username is', username);
 	Users.findOneAndUpdate({ username: username }, { $set: { gname: username } }, { new: true }, (err, obj) => {
 		if (err)
@@ -133,40 +159,51 @@ app.post("/setLeader", (req, res) => {
 					else
 						res.json(object);
 				});
-			}
-			)
+			})
+			sendMail('Role Updated to Group Leader', '', obj.email)
 		}
 	}
 	);
 });
 
 app.post("/setMember", (req, res) => {
-	var { username } = req.body;
-	console.log('username is', username);
+	const { username } = req.body
+	console.log('username is', username)
 	Users.findOneAndUpdate({ username: username }, { $set: { member: true } }, { new: true }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
-		else
-			res.json(obj);
+			res.status(404).json(err)
+		else{
+			sendMail('Role Updated to Group Leader', '', obj.email)
+			res.json(obj)
+		}
 	});
 });
 
 
 app.post("/createNotif", (req, res) => {
-	var { fromGname, toUsername, fromUsername, toGname } = req.body;
-	// console.log('username is',username);
+	const { fromGname, toUsername, fromUsername, toGname } = req.body
 	var notif = { fromgname: fromGname, tousername: toUsername, fromusername: fromUsername, togname: toGname }
 	Notification.find(notif, (err, obj) => {
 		if (err)
 			res.status(404).json(err);
 		else {
 			if (obj.length === 0) {
-				console.log('yes');
 				Notification.create(notif, (error, object) => {
 					if (error)
 						res.status(404).json(error);
-					else
-						res.json(object);
+					else{
+						if(fromGname===null){
+							Users.findOne({username: toGname},(err,user)=>{
+								sendMail(`${fromUsername} requested to join your group!`, '😃', user.email)
+							})
+						}
+						else{
+							Users.findOne({username: toUsername},(err,user)=>{
+								sendMail(`${fromGname} wants to add you in their group!`, '😃', user.email)
+							})
+						}
+						res.json(object)
+					}
 				})
 			}
 			else {
@@ -380,6 +417,7 @@ const isLoggedIn = (req,res,next) => {
 }
 
 app.get('/good', isLoggedIn, (req, res) => {
+
 	res.send(`Logged in as ${req.user}`)
 })
 
