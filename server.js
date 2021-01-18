@@ -101,28 +101,26 @@ async function createUser(user) {
 }
 
 app.post("/register", async (req, res) => {
-	var { name, username, email, password, leader, member } = req.body;
-	const hashedPassword = await bcrypt.hash(password, 10);
-	console.log(hashedPassword)
-	var user = { 
-		name: name, 
-		username: username, 
-		email: email, 
-		password: hashedPassword, 
-		leader: leader, 
-		member: member, 
-		wing: "null" 
-	}
-	createUser(user)
-		.then(result => {
-			console.log(result)
-			res.status(201).send({
-				name: user.name,
-				user: user.username,
-				email: user.email
+	var { email, username } = req.body;
+	await Users.find({email: email},(err,obj) => {
+		if(obj.length==0){
+			res.redirect('/google')
+		}
+	})
+	await Users.find({username: username},(err,obj) => {
+		if(err)
+			res.status(500).send(err)
+		if(obj.length>=1){
+			res.send({
+				error:{
+					code: 11000,
+					msg: "Username Taken",
+				},
+				name: obj.name,
 			})
-		})
-		.catch (err => console.log(err)) 
+		}
+	})
+	res.send('<h1>Registered</h1>')
 });
 
 app.post("/getRole", (req, res) => {
@@ -434,13 +432,25 @@ app.get('/good', isLoggedIn, (req, res) => {
 app.get('/failed', (req, res) => res.send(`Did not log in`))
 
 app.get('/google',
-	passport.authenticate('google', { scope: ['profile', 'email'] }));
+	passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 app.get('/google/callback',
-	passport.authenticate('google', { failureRedirect: '/failed' }),
-	function (req,res) {
+	passport.authenticate('google', { failureRedirect: '/failed' }),(req,res) => {
 		// Successful authentication, redirect home.
 		console.log(req.user);
+		Users.find({email:req.user._json.email},(err,obj) => {
+			if(obj.length==0){
+				const user = { 
+					name: req.user._json.name, 
+					username: req.user._json.email, 
+					email: req.user._json.email, 
+					leader: false, 
+					member: false, 
+					wing: "null" 
+				}
+				createUser(user)
+			}
+		})
 		// res.redirect('/good');
 		res.send(`Logged in as ${req.user.displayName}`)
 	});
