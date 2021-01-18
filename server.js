@@ -192,7 +192,7 @@ app.post("/createNotif", (req, res) => {
 					if (error)
 						res.status(404).json(error);
 					else{
-						if(fromGname===null){
+						if(fromGname===undefined){
 							Users.findOne({username: toGname},(err,user)=>{
 								sendMail(`${fromUsername} requested to join your group!`, '😃', user.email)
 							})
@@ -286,9 +286,11 @@ app.post("/selectWing", (req, res) => {
 			res.status(404).json(err)
 		else{
 			Users.find({gname: user}, (err, arr) => {
-				arr.forEach(object =>{
-					sendMail('Wing Alloted', '✨', object.email)
-				})
+				if(arr.length!=0){
+					arr.forEach(object =>{
+						sendMail('Wing Alloted', '✨', object.email)
+					})
+				}
 			})
 			res.json(obj)
 		}
@@ -298,39 +300,43 @@ app.post("/selectWing", (req, res) => {
 app.post("/setBlocked", (req, res) => {
 	var { bhawan, floor, wingNo } = req.body;
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "blocked" } }, { new: true }, (err, obj) => {
-		console.log(obj);
+		console.log(obj)
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/setFree", (req, res) => {
 	var { bhawan, floor, wingNo } = req.body;
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "free" } }, { new: true }, (err, obj) => {
-		console.log(obj);
+		console.log(obj)
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/notifsReq", (req, res) => {
-	var { fromGname, toUsername, fromUsername, toGname, accept } = req.body;
+	var { fromGname, toUsername, fromUsername, toGname, accept } = req.body
 	console.log('fromGname', fromGname)
 	if (fromGname !== undefined && toUsername !== undefined) {
 		if (accept === true) {
 			Notification.findOneAndUpdate({ fromgname: fromGname, tousername: toUsername }, { $set: { colour: "#00ff00", disabled: true } }, { new: true }, (err, obj) => {
-				console.log(obj);
+				console.log(obj)
 			})
 			Users.findOneAndUpdate({ username: toUsername }, { $set: { gname: fromGname } }, { new: true }, (err, obj) => {
 				console.log(obj);
 				if (err)
 					res.status(404).json(err);
-				else
-					res.json(obj);
+				else{
+					Users.findOne({username:fromGname}, (err,user) => {
+						sendMail(`${toUsername} accepted your invite!`, '', user.email)
+					})
+					res.json(obj)
+				}
 			})
 		}
 		else {
@@ -353,8 +359,12 @@ app.post("/notifsReq", (req, res) => {
 					console.log(obj);
 					if (err)
 						res.status(404).json(err);
-					else
-						res.json(obj);
+					else{
+						Users.findOne({username:fromUsername}, (err,user) => {
+							sendMail(`${toGname} accepted you into their group!`, '', user.email)
+						})
+						res.json(obj)
+					}
 				})
 			}
 			else {
