@@ -4,6 +4,7 @@ const cors = require('cors');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const exphbs = require('express-handlebars');
 const { sendMail } = require('./mailer');
 const mongoose = require('mongoose');
 var { Users } = require('./models/Users');
@@ -24,6 +25,13 @@ app.use(cookieSession({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.engine('hbs', exphbs({
+	defaultLayout: 'main',
+	extname: '.hbs'
+}));
+
+app.set('view engine', 'hbs');
 
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true);
