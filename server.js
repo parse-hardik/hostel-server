@@ -4,6 +4,7 @@ const cors = require('cors');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
 const exphbs = require('express-handlebars');
 const { sendMail } = require('./mailer');
 const mongoose = require('mongoose');
@@ -25,6 +26,7 @@ app.use(cookieSession({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(redirectToHTTPS([/localhost:(\d{4})/]))
 
 app.engine('hbs', exphbs({
 	defaultLayout: 'main',
