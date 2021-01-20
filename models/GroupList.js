@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var GroupSchema = new Schema({
 	gname:{type:String,required:true,unique:true},
-	members:{type:Number,default:0},
+	members:{type:Number,default:1},
 	color:{type:String,default:'#e88f17'},
 });
 

@@ -3,9 +3,9 @@ var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
 	name:{type:String,required:true,unique:false},
-	username:{type:String,required:true,unique:true},
+	username:{type:String,required:true,unique:false},
 	email:{type:String,required:true,unique:true},
-	password:{type:String,required:true,unique:false},
+	// password:{type:String,required:true,unique:false},
 	leader:{type:Boolean,required:true},
 	member:{type:Boolean,required:true},
 	group:{type:String,required:false},

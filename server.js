@@ -3,7 +3,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
+const exphbs = require('express-handlebars');
+const { sendMail } = require('./mailer');
 const mongoose = require('mongoose');
 var { Users } = require('./models/Users');
 var { GroupList } = require('./models/GroupList');
@@ -23,6 +25,13 @@ app.use(cookieSession({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.engine('hbs', exphbs({
+	defaultLayout: 'main',
+	extname: '.hbs'
+}));
+
+app.set('view engine', 'hbs');
 
 mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true);
@@ -80,20 +89,46 @@ app.post("/signIn", (req, res) => {
 	});
 });
 
-app.post("/register", async (req, res) => {
-	var { name, username, email, password, leader, member } = req.body;
-	const hashedPassword = await bcrypt.hash(password, 10);
-	console.log(hashedPassword)
-	var user = { name: name, username: username, email: email, password: hashedPassword, leader: leader, member: member, wing: "null" };
-	Users.create(user, (err, obj) => {
+async function createUser(user) {
+	await Users.create(user, (err, obj) => {
 		if (err) {
 			console.log(err);
-			res.send({ status: false, error: err })
+			// res.send({ status: false, error: err })
+			return {
+				status: false, 
+				error: err
+			}
 		}
 		else {
-			res.send(obj);
+			sendMail('Registered Successfully!', '🎉', user.email).then(result=>console.log(result))
+				.catch(err => console.log(err));
+			// res.send(obj);
+			return obj;
 		}
 	});
+}
+
+app.post("/register", async (req, res) => {
+	var { email, username } = req.body;
+	await Users.find({email: email},(err,obj) => {
+		if(obj.length==0){
+			res.redirect('/google')
+		}
+	})
+	await Users.find({username: username},(err,obj) => {
+		if(err)
+			res.status(500).send(err)
+		if(obj.length>=1){
+			res.send({
+				error:{
+					code: 11000,
+					msg: "Username Taken",
+				},
+				name: obj.name,
+			})
+		}
+	})
+	res.send('<h1>Registered</h1>')
 });
 
 app.post("/getRole", (req, res) => {
@@ -109,7 +144,7 @@ app.post("/getRole", (req, res) => {
 });
 
 app.post("/setLeader", (req, res) => {
-	var { username } = req.body;
+	const { username } = req.body;
 	console.log('username is', username);
 	Users.findOneAndUpdate({ username: username }, { $set: { gname: username } }, { new: true }, (err, obj) => {
 		if (err)
@@ -130,40 +165,51 @@ app.post("/setLeader", (req, res) => {
 					else
 						res.json(object);
 				});
-			}
-			)
+			})
+			sendMail('Role Updated to Group Leader', '', obj.email)
 		}
 	}
 	);
 });
 
 app.post("/setMember", (req, res) => {
-	var { username } = req.body;
-	console.log('username is', username);
+	const { username } = req.body
+	console.log('username is', username)
 	Users.findOneAndUpdate({ username: username }, { $set: { member: true } }, { new: true }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
-		else
-			res.json(obj);
+			res.status(404).json(err)
+		else{
+			sendMail('Role Updated to Group Leader', '', obj.email)
+			res.json(obj)
+		}
 	});
 });
 
 
 app.post("/createNotif", (req, res) => {
-	var { fromGname, toUsername, fromUsername, toGname } = req.body;
-	// console.log('username is',username);
+	const { fromGname, toUsername, fromUsername, toGname } = req.body
 	var notif = { fromgname: fromGname, tousername: toUsername, fromusername: fromUsername, togname: toGname }
 	Notification.find(notif, (err, obj) => {
 		if (err)
 			res.status(404).json(err);
 		else {
 			if (obj.length === 0) {
-				console.log('yes');
 				Notification.create(notif, (error, object) => {
 					if (error)
 						res.status(404).json(error);
-					else
-						res.json(object);
+					else{
+						if(fromGname===undefined){
+							Users.findOne({username: toGname},(err,user)=>{
+								sendMail(`${fromUsername} requested to join your group!`, '😃', user.email)
+							})
+						}
+						else{
+							Users.findOne({username: toUsername},(err,user)=>{
+								sendMail(`${fromGname} wants to add you in their group!`, '😃', user.email)
+							})
+						}
+						res.json(object)
+					}
 				})
 			}
 			else {
@@ -177,120 +223,126 @@ app.post("/createNotif", (req, res) => {
 });
 
 app.post("/getNotifsformember", (req, res) => {
-	var { username } = req.body;
-	// console.log('username is',username);
+	const { username } = req.body
 	Notification.find({ tousername: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else {
-			console.log(obj)
-			res.json(obj);
+			res.json(obj)
 		}
 	});
 });
 
 app.post("/getNotifsforLeader", (req, res) => {
-	var { username } = req.body;
-	// console.log('username is',username);
+	const { username } = req.body
 	Notification.find({ togname: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getUsers", (req, res) => {
-	var { leader } = req.body;
+	const { leader } = req.body
 	Users.find({ leader: leader }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getGroups", (req, res) => {
-	var { gname, grpid, members, color } = req.body;
-	var grp = { gname: gname, grpid: grpid, members: members, color: color };
+	const { gname, grpid, members, color } = req.body
+	const grp = { gname: gname, grpid: grpid, members: members, color: color }
 	GroupList.create(grp, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
-	});
+			res.json(obj)
+	})
 });
 
 app.post("/getOneUser", (req, res) => {
-	var { username } = req.body;
+	const { username } = req.body
 	Users.find({ username: username }, (err, obj) => {
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	});
 });
 
 app.post("/setSelected", (req, res) => {
-	var { bhawan, floor, wingNo } = req.body;
-	console.log(bhawan, wingNo, floor);
+	const { bhawan, floor, wingNo } = req.body
+	console.log(bhawan, wingNo, floor)
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "selected" } }, { new: true }, (err, obj) => {
-		console.log(obj);
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/selectWing", (req, res) => {
-	var { wing, user } = req.body;
-	console.log("hiii" + wing + user);
+	const { wing, user } = req.body
 	Users.findOneAndUpdate({ username: user }, { $set: { wing: wing } }, (err, obj) => {
-		console.log(obj);
 		if (err)
-			res.status(404).json(err);
-		else
-			res.json(obj);
+			res.status(404).json(err)
+		else{
+			Users.find({gname: user}, (err, arr) => {
+				if(arr.length!=0){
+					arr.forEach(object =>{
+						sendMail('Wing Alloted', '✨', object.email)
+					})
+				}
+			})
+			res.json(obj)
+		}
 	})
 })
 
 app.post("/setBlocked", (req, res) => {
 	var { bhawan, floor, wingNo } = req.body;
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "blocked" } }, { new: true }, (err, obj) => {
-		console.log(obj);
+		console.log(obj)
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/setFree", (req, res) => {
 	var { bhawan, floor, wingNo } = req.body;
 	Wing.findOneAndUpdate({ bhawan: bhawan, floor: floor, wingNo: wingNo }, { $set: { status: "free" } }, { new: true }, (err, obj) => {
-		console.log(obj);
+		console.log(obj)
 		if (err)
-			res.status(404).json(err);
+			res.status(404).json(err)
 		else
-			res.json(obj);
+			res.json(obj)
 	})
 })
 
 app.post("/notifsReq", (req, res) => {
-	var { fromGname, toUsername, fromUsername, toGname, accept } = req.body;
+	var { fromGname, toUsername, fromUsername, toGname, accept } = req.body
 	console.log('fromGname', fromGname)
 	if (fromGname !== undefined && toUsername !== undefined) {
 		if (accept === true) {
 			Notification.findOneAndUpdate({ fromgname: fromGname, tousername: toUsername }, { $set: { colour: "#00ff00", disabled: true } }, { new: true }, (err, obj) => {
-				console.log(obj);
+				console.log(obj)
 			})
 			Users.findOneAndUpdate({ username: toUsername }, { $set: { gname: fromGname } }, { new: true }, (err, obj) => {
 				console.log(obj);
 				if (err)
 					res.status(404).json(err);
-				else
-					res.json(obj);
+				else{
+					Users.findOne({username:fromGname}, (err,user) => {
+						sendMail(`${toUsername} accepted your invite!`, '', user.email)
+					})
+					res.json(obj)
+				}
 			})
 		}
 		else {
@@ -313,8 +365,12 @@ app.post("/notifsReq", (req, res) => {
 					console.log(obj);
 					if (err)
 						res.status(404).json(err);
-					else
-						res.json(obj);
+					else{
+						Users.findOne({username:fromUsername}, (err,user) => {
+							sendMail(`${toGname} accepted you into their group!`, '', user.email)
+						})
+						res.json(obj)
+					}
 				})
 			}
 			else {
@@ -377,19 +433,32 @@ const isLoggedIn = (req,res,next) => {
 }
 
 app.get('/good', isLoggedIn, (req, res) => {
+
 	res.send(`Logged in as ${req.user}`)
 })
 
 app.get('/failed', (req, res) => res.send(`Did not log in`))
 
 app.get('/google',
-	passport.authenticate('google', { scope: ['profile', 'email'] }));
+	passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 app.get('/google/callback',
-	passport.authenticate('google', { failureRedirect: '/failed' }),
-	function (req,res) {
+	passport.authenticate('google', { failureRedirect: '/failed' }),(req,res) => {
 		// Successful authentication, redirect home.
 		console.log(req.user);
+		Users.find({email:req.user._json.email},(err,obj) => {
+			if(obj.length==0){
+				const user = { 
+					name: req.user._json.name, 
+					username: req.user._json.email, 
+					email: req.user._json.email, 
+					leader: false, 
+					member: false, 
+					wing: "null" 
+				}
+				createUser(user)
+			}
+		})
 		// res.redirect('/good');
 		res.send(`Logged in as ${req.user.displayName}`)
 	});
@@ -401,7 +470,8 @@ app.get('/logout', (req,res) => {
 })
 
 app.get('/', (req, res) => {
-	res.status(200).json('Server is up and running')
+	// res.status(200).json('Server is up and running')
+	res.render('Registered',{username:'Hardik'})
 })
 process.env.PORT = 5000
 app.listen(process.env.PORT || 5000, () => {
