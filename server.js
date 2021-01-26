@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
-const bcrypt = require('bcrypt');
+const querystring = require('querystring')
 const cookieSession = require('cookie-session');
 const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
 const exphbs = require('express-handlebars');
@@ -79,16 +79,8 @@ app.get("/getWing", (req, res) => {
 	})
 });
 
-app.post("/signIn", (req, res) => {
-	var { username, password } = req.body;
-
-	Users.findOne({ username: username }, async (err, result) => {
-		if (err)
-			res.send(err);
-		if (await bcrypt.compare(password, result.password))
-			res.send(result);
-		console.log(result);
-	});
+app.get("/signIn", (req, res) => {
+	res.redirect('/google')
 });
 
 async function createUser(user) {
@@ -97,41 +89,18 @@ async function createUser(user) {
 			console.log(err);
 			// res.send({ status: false, error: err })
 			return {
-				status: false, 
+				status: false,
 				error: err
 			}
 		}
 		else {
-			sendMail('Registered Successfully!', '🎉', user.email).then(result=>console.log(result))
+			sendMail('Registered Successfully!', '🎉', user.email).then(result => console.log(result))
 				.catch(err => console.log(err));
 			// res.send(obj);
 			return obj;
 		}
 	});
 }
-
-app.post("/register", async (req, res) => {
-	var { email, username } = req.body;
-	await Users.find({email: email},(err,obj) => {
-		if(obj.length==0){
-			res.redirect('/google')
-		}
-	})
-	await Users.find({username: username},(err,obj) => {
-		if(err)
-			res.status(500).send(err)
-		if(obj.length>=1){
-			res.send({
-				error:{
-					code: 11000,
-					msg: "Username Taken",
-				},
-				name: obj.name,
-			})
-		}
-	})
-	res.send('<h1>Registered</h1>')
-});
 
 app.post("/getRole", (req, res) => {
 	var { username } = req.body;
@@ -180,7 +149,7 @@ app.post("/setMember", (req, res) => {
 	Users.findOneAndUpdate({ username: username }, { $set: { member: true } }, { new: true }, (err, obj) => {
 		if (err)
 			res.status(404).json(err)
-		else{
+		else {
 			sendMail('Role Updated to Group Leader', '', obj.email)
 			res.json(obj)
 		}
@@ -199,14 +168,14 @@ app.post("/createNotif", (req, res) => {
 				Notification.create(notif, (error, object) => {
 					if (error)
 						res.status(404).json(error);
-					else{
-						if(fromGname===undefined){
-							Users.findOne({username: toGname},(err,user)=>{
+					else {
+						if (fromGname === undefined) {
+							Users.findOne({ username: toGname }, (err, user) => {
 								sendMail(`${fromUsername} requested to join your group!`, '😃', user.email)
 							})
 						}
-						else{
-							Users.findOne({username: toUsername},(err,user)=>{
+						else {
+							Users.findOne({ username: toUsername }, (err, user) => {
 								sendMail(`${fromGname} wants to add you in their group!`, '😃', user.email)
 							})
 						}
@@ -292,10 +261,10 @@ app.post("/selectWing", (req, res) => {
 	Users.findOneAndUpdate({ username: user }, { $set: { wing: wing } }, (err, obj) => {
 		if (err)
 			res.status(404).json(err)
-		else{
-			Users.find({gname: user}, (err, arr) => {
-				if(arr.length!=0){
-					arr.forEach(object =>{
+		else {
+			Users.find({ gname: user }, (err, arr) => {
+				if (arr.length != 0) {
+					arr.forEach(object => {
 						sendMail('Wing Alloted', '✨', object.email)
 					})
 				}
@@ -339,8 +308,8 @@ app.post("/notifsReq", (req, res) => {
 				console.log(obj);
 				if (err)
 					res.status(404).json(err);
-				else{
-					Users.findOne({username:fromGname}, (err,user) => {
+				else {
+					Users.findOne({ username: fromGname }, (err, user) => {
 						sendMail(`${toUsername} accepted your invite!`, '', user.email)
 					})
 					res.json(obj)
@@ -367,8 +336,8 @@ app.post("/notifsReq", (req, res) => {
 					console.log(obj);
 					if (err)
 						res.status(404).json(err);
-					else{
-						Users.findOne({username:fromUsername}, (err,user) => {
+					else {
+						Users.findOne({ username: fromUsername }, (err, user) => {
 							sendMail(`${toGname} accepted you into their group!`, '', user.email)
 						})
 						res.json(obj)
@@ -427,10 +396,10 @@ app.post('/timer/:id', (req, res) => {
 	})
 })
 
-const isLoggedIn = (req,res,next) => {
-	if(req.user)
+const isLoggedIn = (req, res, next) => {
+	if (req.user)
 		next();
-	else	
+	else
 		res.sendStatus(401);
 }
 
@@ -445,35 +414,37 @@ app.get('/google',
 	passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 app.get('/google/callback',
-	passport.authenticate('google', { failureRedirect: '/failed' }),(req,res) => {
+	passport.authenticate('google', { failureRedirect: '/failed' }), (req, res) => {
 		// Successful authentication, redirect home.
 		console.log(req.user);
-		Users.find({email:req.user._json.email},(err,obj) => {
-			if(obj.length==0){
-				const user = { 
-					name: req.user._json.name, 
-					username: req.user._json.email, 
-					email: req.user._json.email, 
-					leader: false, 
-					member: false, 
-					wing: "null" 
+		Users.find({ email: req.user._json.email }, (err, obj) => {
+			if (obj.length == 0) {
+				const user = {
+					name: req.user._json.name,
+					username: req.user._json.email,
+					email: req.user._json.email,
+					leader: false,
+					member: false,
+					wing: "null"
 				}
 				createUser(user)
 			}
 		})
-		// res.redirect('/good');
-		res.send(`Logged in as ${req.user.displayName}`)
+		const query = querystring.stringify({
+			"username":req.user._json.given_name,
+		});
+		res.redirect('/?' + query);
 	});
 
-app.get('/logout', (req,res) => {
-	req.session=null;
+app.get('/logout', (req, res) => {
+	req.session = null;
 	req.logOut();
 	res.redirect('/');
 })
 
 app.get('/', (req, res) => {
 	// res.status(200).json('Server is up and running')
-	res.render('Registered',{username:'Hardik'})
+	res.render('Registered', { username: req.query.username })
 })
 process.env.PORT = 5000
 app.listen(process.env.PORT || 5000, () => {
